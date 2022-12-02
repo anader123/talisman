@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/utils/Base64.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 error AlreadyMinted();
+error EndTimePassed();
 error InvalidBlockNumber();
 error BlockNumberTooOld();
 error InvalidSignature();
@@ -20,8 +21,8 @@ contract Talisman is Ownable, ERC721A {
     string description;
     address chipAddress;
     uint256 maxBlockMint;
+    uint256 endTime;
 
-    event adminMinted(address indexed recipient, uint256 indexed quantity);
     event chipAddressUpdated(address indexed newChipAddress, address indexed prevChipAddress);
     event metaDataUpdated(string indexed _imageURI, string indexed _animationURI, string indexed _description);
 
@@ -31,21 +32,27 @@ contract Talisman is Ownable, ERC721A {
         uint256 _mintAmount,
         string memory _imageURI,
         string memory _animationURI,
-        string memory _description
+        string memory _description,
+        uint256 _endTime
         ) ERC721A("Black Jade Talisman Card", "BJTC") 
     {
         chipAddress = _chipAddress;
         maxBlockMint = _maxBlockMint;
-        adminMint(_mintAmount);
+        _mint(msg.sender, _mintAmount);
         imageURI = _imageURI;
         animationURI = _animationURI;
         description = _description;
+        endTime = _endTime;
     }
 
     function mint(bytes calldata signatureFromChip, uint256 blockNumberUsedInSig) external payable {
         // Max mint of 1 NFT per address
         if(_numberMinted(msg.sender) >= 1) {
             revert AlreadyMinted();
+        }
+
+        if(now > endTime) {
+            revert EndTimePassed();
         }
 
         // The blockNumberUsedInSig must be in a previous block because the blockhash of the current
@@ -86,12 +93,6 @@ contract Talisman is Ownable, ERC721A {
             "data:application/json;base64,",
             Base64.encode(dataURI)
         ));
-    }
-
-
-    function adminMint(uint256 _quantity) public onlyOwner {
-        _mint(msg.sender, _quantity);
-        emit adminMinted(msg.sender, _quantity);
     }
 
     function updateChipAddress(address _newChipAddress) public onlyOwner {
