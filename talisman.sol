@@ -84,9 +84,9 @@ contract Talisman is Ownable, ERC721A {
         bytes memory dataURI = abi.encodePacked(
             '{',
                 '"name": "Black Jade Talisman Card ', tokenId.toString(), '",',
-                '"description": "', description,'", ',
-                '"image": "', imageURI,'", ',
-                '"animation_url": "', animationURI,'" '
+                '"description": "', description, '",',
+                '"image": "', imageURI, '",',
+                '"animation_url": "', animationURI, '"',
             '}'
         );
         return string(abi.encodePacked(
